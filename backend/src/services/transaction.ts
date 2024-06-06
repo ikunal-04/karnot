@@ -78,7 +78,7 @@ const fetchTransactions = async () => {
 const pollForNewBlocks = async () => {
     setInterval(async () => {
       await fetchTransactions();
-    }, 30000);
+    }, 300000);
 };
 
 export { fetchTransactions, pollForNewBlocks };
