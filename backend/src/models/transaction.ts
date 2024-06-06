@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
 
 const transactionSchema = new mongoose.Schema({
+    status: String,
     blockNumber: Number,
     transactionHash: String,
     type: String,
-}, { timestamps: true });
+    age: String
+});
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 

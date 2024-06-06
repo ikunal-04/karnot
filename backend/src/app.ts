@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import dataBaseConnection from './config/database';
+import cors from 'cors';
 
 import { fetchTransactions, pollForNewBlocks } from './services/transaction';
 import transactionController from './controllers/transactionController';
@@ -9,6 +10,7 @@ const app = express();
 dotenv.config();
 
 app.use(express.json());
+app.use(cors());
 
 dataBaseConnection();
 

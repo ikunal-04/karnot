@@ -1,8 +1,32 @@
 import axios from "axios";
 import Transaction from "../models/transaction";
-import { get } from "http";
+// import { get } from "http";
 
 const API_URL = "https://free-rpc.nethermind.io/mainnet-juno";
+
+let status: string = "";
+let timestamps: any = "";
+
+function calculateAge(unixTimestamp: any) {
+    const createdDate: any = new Date(unixTimestamp * 1000);
+    const now: any = new Date();
+    const diff = now - createdDate;
+  
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+  
+    if (days > 0) {
+      return `${days} days ago`;
+    } else if (hours > 0) {
+      return `${hours} hours ago`;
+    } else if (minutes > 0) {
+      return `${minutes} minutes ago`;
+    } else {
+      return `${seconds} seconds ago`;
+    }
+  }
 
 const getLatestBlock = async (): Promise<number> => {
     const response = await axios.post(API_URL, {
@@ -25,7 +49,9 @@ const getBlockWithTxs = async (blockNumber: number): Promise<object> => {
         ],
         id: 1
     });
-    // console.log("block with txs",response.data.result.transactions)
+    // console.log("block with txs",response.data.result.status)
+    status = response.data.result.status;
+    timestamps = response.data.result.timestamp;
     return response.data.result.transactions;
 }
 
@@ -36,10 +62,14 @@ const fetchTransactions = async () => {
         const transactions: any[] = await getBlockWithTxs(i) as any[];
         // console.log("these are the transaction", transactions);
         transactions.forEach(async (tx: any) => {
+            // console.log("tx",tx.status);
+            
             await Transaction.create({
+                status: status,
                 blockNumber: i,
                 transactionHash: tx.transaction_hash,
-                type: tx.type
+                type: tx.type,
+                age: calculateAge(timestamps)
             });
         });
     }

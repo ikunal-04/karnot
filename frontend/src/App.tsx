@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Table,
   TableBody,
@@ -6,7 +7,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Layers2 } from 'lucide-react';
+
+interface Transaction {
+  _id: string;
+  status: string;
+  transactionHash: string;
+  type: string;
+  blockNumber: number;
+  age: string;
+}
 
 const tabs = [
   { name: 'All', id: 'all' },
@@ -17,15 +35,31 @@ const tabs = [
   { name: 'l1_handler', id: 'l1_handler' },
 ];
 
-useEffect(() => {
-  
-})
+const formatHash = (hash: string) => {
+  return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
+};
 
-function App() {
-  const [activeTab, setActiveTab] = useState('all');
+const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const { data } = await axios.get<Transaction[]>('http://localhost:3000/transactions');
+        setTransactions(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching transactions', error);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
 
   return (
-    <main className="h-screen bg-[#121212] p-9 text-white">
+    <main className={`bg-[#121212] p-9 text-white ${loading ? 'h-screen' : 'h-full'}`}>
       <div className="bg-[rgb(27,27,27)] h-max rounded-xl p-7">
         <div className="grid gap-y-1">
           <div className="text-2xl">
@@ -38,13 +72,12 @@ function App() {
 
         <div className="cursor-pointer border-none outline-none flex mt-9">
           {tabs.map((tab) => (
-            <div className='border border-[#4B4B4B] text-sm'>
+            <div key={tab.id} className='border border-[#4B4B4B] text-sm'>
               <button
-              key={tab.id}
-              className={`cursor-pointer border-none outline-none px-4 py-2 transition-colors duration-300 ${
-                activeTab === tab.id ? 'bg-[#4B4B4B]' : 'bg-transparent'
-              }`}
-              onClick={() => setActiveTab(tab.id)}
+                className={`cursor-pointer border-none outline-none px-4 py-2 transition-colors duration-300 ${
+                  activeTab === tab.id ? 'bg-[#4B4B4B]' : 'bg-transparent'
+                }`}
+                onClick={() => setActiveTab(tab.id)}
               >
                 {tab.name}
               </button>
@@ -59,32 +92,67 @@ function App() {
                 <TableHead className="w-[100px]">Status</TableHead>
                 <TableHead>Hash</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead >Block</TableHead>
+                <TableHead>Block</TableHead>
                 <TableHead className="text-right">Age</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow className='hover:bg-[#4B4B4C]'>
-                <TableCell className="font-medium">INV001</TableCell>
-                <TableCell>Paid</TableCell>
-                <TableCell>Credit Card</TableCell>
-                <TableCell >$250.00</TableCell>
-                <TableCell className="text-right">3 minutes ago</TableCell>
-              </TableRow>
+              {loading && (
+                <TableRow>
+                  <TableCell>
+                    <Skeleton className="bg-slate-500 w-[50px] h-[20px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="bg-slate-500 w-[100px] h-[20px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="bg-slate-500 w-[100px] h-[20px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="bg-slate-500 w-[100px] h-[20px]" />
+                  </TableCell>
+                  <TableCell className="flex justify-end">
+                    <Skeleton className="bg-slate-500 w-[50px] h-[20px]" />
+                  </TableCell>
+                </TableRow>            
+              )}
+              {!loading && activeTab === 'all' && transactions.map((transaction) => (
+                <TableRow key={transaction._id}>
+                  <TableCell>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Layers2 size={16} fill="green" strokeWidth={1}/>
+                        </TooltipTrigger>
+                        <TooltipContent className='bg-white text-black'>
+                          <p>{transaction.status}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableCell>
+                  <TableCell>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>{formatHash(transaction.transactionHash)}</TooltipTrigger>
+                        <TooltipContent className='bg-white text-black'>
+                          <p >{transaction.transactionHash}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableCell>
+                  <TableCell>
+                    {transaction.type}
+                  </TableCell>
+                  <TableCell>{transaction.blockNumber}</TableCell>
+                  <TableCell className="text-right">{transaction.age}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
-        {/* <div className="mt-4 p-4 border">
-          {activeTab === 'all' && <div>All transactions content</div>}
-          {activeTab === 'declare' && <div>declare transactions content</div>}
-          {activeTab === 'deploy' && <div>deploy transactions content</div>}
-          {activeTab === 'deploy_account' && <div>deploy_account transactions content</div>}
-          {activeTab === 'invoke' && <div>invoke transactions content</div>}
-          {activeTab === 'l1_handler' && <div>l1_handler transactions content</div>}
-        </div> */}
       </div>
     </main>
-  )
+  );
 }
 
-export default App
+export default App;
