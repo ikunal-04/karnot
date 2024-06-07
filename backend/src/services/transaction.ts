@@ -3,6 +3,7 @@ import Transaction from "../models/transaction";
 // import { get } from "http";
 
 const API_URL = "https://free-rpc.nethermind.io/mainnet-juno";
+const TIMEOUT = 10000;
 
 let status: string = "";
 let timestamps: any = "";
@@ -28,8 +29,13 @@ function calculateAge(unixTimestamp: any) {
     }
   }
 
+  const axiosInstance = axios.create({
+    baseURL: API_URL,
+    timeout: TIMEOUT,
+  });
+
 const getLatestBlock = async (): Promise<number> => {
-    const response = await axios.post(API_URL, {
+    const response = await axiosInstance.post(API_URL, {
         jsonrpc: "2.0",
         method: "starknet_blockNumber",
         params: [],
@@ -41,7 +47,7 @@ const getLatestBlock = async (): Promise<number> => {
 
 const getBlockWithTxs = async (blockNumber: number): Promise<object> => {
     // console.log("blockNumber",blockNumber)
-    const response = await axios.post(API_URL, {
+    const response = await axiosInstance.post(API_URL, {
         jsonrpc: "2.0",
         method: "starknet_getBlockWithTxs",
         params: [
@@ -78,7 +84,7 @@ const fetchTransactions = async () => {
 const pollForNewBlocks = async () => {
     setInterval(async () => {
       await fetchTransactions();
-    }, 300000);
+    }, 30000);
 };
 
 export { fetchTransactions, pollForNewBlocks };
