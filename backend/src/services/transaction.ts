@@ -35,50 +35,56 @@ function calculateAge(unixTimestamp: any) {
   });
 
 const getLatestBlock = async (): Promise<number> => {
-    const response = await axiosInstance.post(API_URL, {
-        jsonrpc: "2.0",
-        method: "starknet_blockNumber",
-        params: [],
-        id: 1
+  try {
+    const response = await axiosInstance.post("", {
+      jsonrpc: "2.0",
+      method: "starknet_blockNumber",
+      params: [],
+      id: 1,
     });
-    // console.log(response.data.result)
     return response.data.result;
+  } catch (error: any) {
+    console.error("Error fetching latest block:", error.message);
+    throw error;
+  }
 }
 
 const getBlockWithTxs = async (blockNumber: number): Promise<object> => {
-    // console.log("blockNumber",blockNumber)
-    const response = await axiosInstance.post(API_URL, {
-        jsonrpc: "2.0",
-        method: "starknet_getBlockWithTxs",
-        params: [
-            {block_number: blockNumber}
-        ],
-        id: 1
+  try {
+    const response = await axiosInstance.post("", {
+      jsonrpc: "2.0",
+      method: "starknet_getBlockWithTxs",
+      params: [{ block_number: blockNumber }],
+      id: 1,
     });
-    // console.log("block with txs",response.data.result.status)
     status = response.data.result.status;
     timestamps = response.data.result.timestamp;
     return response.data.result.transactions;
+  } catch (error: any) {
+    console.error(`Error fetching block with transactions for block ${blockNumber}:`, error.message);
+    throw error;
+  }
 }
 
 const fetchTransactions = async () => {
+  try {
     const latestBlock = await getLatestBlock();
     const firstBlock = latestBlock - 10;
-    for(let i = firstBlock; i < latestBlock; i++) {
-        const transactions: any[] = await getBlockWithTxs(i) as any[];
-        // console.log("these are the transaction", transactions);
-        transactions.forEach(async (tx: any) => {
-            // console.log("tx",tx.status);
-            
-            await Transaction.create({
-                status: status,
-                blockNumber: i,
-                transactionHash: tx.transaction_hash,
-                type: tx.type,
-                age: calculateAge(timestamps)
-            });
+    for (let i = firstBlock; i < latestBlock; i++) {
+      const transactions: any[] = await getBlockWithTxs(i) as any[];
+      transactions.forEach(async (tx: any) => {
+        await Transaction.create({
+          status: status,
+          blockNumber: i,
+          transactionHash: tx.transaction_hash,
+          type: tx.type,
+          age: calculateAge(timestamps),
         });
+      });
     }
+  } catch (error: any) {
+    console.error("Error fetching transactions:", error.message);
+  }
 }
 
 const pollForNewBlocks = async () => {
