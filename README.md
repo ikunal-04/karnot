@@ -1,6 +1,7 @@
 ## Karnot full stack assignment
 
 This is the screen recording of the functional app:
+
 https://github.com/ikunal-04/karnot/assets/112847288/a95e2edd-6996-4fa8-ba9c-532bdeabc45e
 
 
