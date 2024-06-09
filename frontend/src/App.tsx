@@ -9,7 +9,7 @@ import L1_Handler from './components/tabs/l1Handler';
 const tabs = [
   { name: 'All', id: 'all' },
   { name: 'declare', id: 'declare' },
-  { name: 'deploy', id: 'deploy' },
+  { name: 'deploy', id: 'deploy' }, 
   { name: 'deploy_account', id: 'deploy_account' },
   { name: 'invoke', id: 'invoke' },
   { name: 'l1_handler', id: 'l1_handler' },
